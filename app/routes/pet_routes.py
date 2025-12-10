@@ -1,6 +1,9 @@
 from flask import Blueprint, request, abort, make_response
 from ..db import db
 from ..models.pet import Pet
+from google import genai
+
+client = genai.Client()
 
 bp = Blueprint("pets", __name__, url_prefix="/pets")
 
@@ -39,3 +42,23 @@ def validate_model(cls,id):
 
     response = {"message": f"{cls.__name__} {id} not found"}
     abort(make_response(response, 404))
+
+#Nadia suggestion
+def generate_pet_name(species, color, personality):
+    prompt = f"""
+    You are helping choose a name for a pet.
+
+    Species: {species}
+    Color: {color}
+    Personality: {personality}
+
+    Generate ONE unique, cute, memorable name that fits this pet.
+    Return ONLY the name, with no explanations, no punctuation, and no quotes.
+    """
+
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+    )
+
+    return response.text.strip().strip(" \"'.,")
